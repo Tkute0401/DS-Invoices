@@ -142,7 +142,7 @@ export default async function DashboardPage() {
           <div className="p-0">
             {recentInvoices.length > 0 ? (
               <ul className="divide-y divide-gray-200">
-                {recentInvoices.map(inv => (
+                {recentInvoices.map((inv: any) => (
                   <li key={inv.id} className="p-5 hover:bg-gray-50 transition-colors">
                     <div className="flex justify-between items-center">
                       <div>
@@ -184,7 +184,7 @@ export default async function DashboardPage() {
           <div className="p-0">
             {receipts.length > 0 ? (
               <ul className="divide-y divide-gray-200">
-                {receipts.map(rec => (
+                {receipts.map((rec: any) => (
                   <li key={rec.id} className="p-5 hover:bg-gray-50 transition-colors">
                     <div className="flex justify-between items-center">
                       <div>
