@@ -54,7 +54,7 @@ export default async function DashboardPage() {
   let paidCount = 0;
   let unpaidCount = 0;
 
-  invoices.forEach(inv => {
+  invoices.forEach((inv: any) => {
     totalDue += inv.amountDue;
     totalCollected += inv.amountPaid;
     totalInvoiced += inv.grandTotal;
