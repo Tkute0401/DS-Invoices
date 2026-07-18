@@ -96,7 +96,7 @@ export default function ReceiptEditor() {
     });
   }, []);
 
-  const clientOptions = clients.map(c => ({ value: c.id, label: c.name, isNew: false }));
+  const clientOptions = clients.map((c: any) => ({ value: c.id, label: c.name, isNew: false }));
 
   const handleClientChange = (newValue: any) => {
     setSelectedClient(newValue);
@@ -118,7 +118,7 @@ export default function ReceiptEditor() {
       setOpenInvoices([]);
       setAllocations([]);
     } else {
-      const client = clients.find(c => c.id === newValue.value);
+      const client = clients.find((c: any) => c.id === newValue.value);
       if (client) {
         setIssuedTo({
           id: client.id,
@@ -132,11 +132,11 @@ export default function ReceiptEditor() {
         fetch('/api/invoices')
           .then(res => res.json())
           .then((data: Invoice[]) => {
-             const clientOpenInvoices = data.filter(inv => inv.clientId === client.id && inv.amountDue > 0);
+             const clientOpenInvoices = data.filter((inv: any) => inv.clientId === client.id && inv.amountDue > 0);
              setOpenInvoices(clientOpenInvoices);
              
              // Create empty allocations for these invoices
-             const newAllocations = clientOpenInvoices.map(inv => ({
+             const newAllocations = clientOpenInvoices.map((inv: any) => ({
                 invoiceId: inv.id,
                 invoiceNumber: inv.invoiceNumber,
                 amountDue: inv.amountDue,
@@ -239,7 +239,7 @@ export default function ReceiptEditor() {
         clientId = client.id;
       }
 
-      const validAllocations = allocations.filter(a => a.amountAllocated > 0);
+      const validAllocations = allocations.filter((a: any) => a.amountAllocated > 0);
 
       // 2. Save receipt
       const res = await fetch('/api/receipts', {
@@ -252,7 +252,7 @@ export default function ReceiptEditor() {
           amountReceived: receipt.amountReceived,
           tdsAmount: receipt.tdsAmount,
           transactionCharges: receipt.transactionCharges,
-          paymentRecords: validAllocations.map(alloc => ({
+          paymentRecords: validAllocations.map((alloc: any) => ({
             invoiceId: alloc.invoiceId,
             amountAllocated: alloc.amountAllocated,
             paymentMethod: receipt.method,
@@ -388,7 +388,7 @@ export default function ReceiptEditor() {
                 <div className="text-[#333b47] font-bold mb-4">Payment Account</div>
                 <select value={receipt.paymentAccountId} onChange={e => setReceipt({...receipt, paymentAccountId: e.target.value})} className="text-[#4b5563] bg-transparent outline-none w-full border-b border-transparent hover:border-gray-300 focus:border-black leading-tight cursor-pointer">
                   <option value="">-- Select --</option>
-                  {paymentAccounts.map(acc => (
+                  {paymentAccounts.map((acc: any) => (
                     <option key={acc.id} value={acc.id}>{acc.accountName} ({acc.bankName || acc.accountType})</option>
                   ))}
                 </select>
@@ -490,13 +490,13 @@ export default function ReceiptEditor() {
               </tr>
             </thead>
             <tbody>
-              {allocations.filter(a => a.amountAllocated > 0).map(alloc => (
+              {allocations.filter((a: any) => a.amountAllocated > 0).map((alloc: any) => (
                 <tr key={alloc.invoiceId} className="border-b border-gray-200 bg-white align-top">
                     <td className="py-2 px-3 text-[12px] font-medium">{alloc.invoiceNumber}</td>
                     <td className="py-2 px-3 text-[12px] text-right font-medium">₹{alloc.amountAllocated.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                 </tr>
               ))}
-              {allocations.filter(a => a.amountAllocated > 0).length === 0 && (
+              {allocations.filter((a: any) => a.amountAllocated > 0).length === 0 && (
                 <tr><td colSpan={2} className="py-2 px-3 text-[12px] text-gray-500">Unallocated Payment</td></tr>
               )}
             </tbody>

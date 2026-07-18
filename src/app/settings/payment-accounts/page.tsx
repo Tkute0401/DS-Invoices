@@ -190,7 +190,7 @@ export default function PaymentAccountsPage() {
                   </td>
                 </tr>
               ) : (
-                accounts.map(acc => (
+                accounts.map((acc: any) => (
                   <tr key={acc.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="py-3 px-4 font-medium text-gray-800">{acc.accountName}</td>
                     <td className="py-3 px-4 text-gray-600 text-sm">{acc.accountType}</td>

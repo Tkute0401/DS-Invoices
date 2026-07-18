@@ -97,9 +97,9 @@ export default function InvoiceEditor() {
   }, []);
 
   // Format clients for react-select
-  const clientOptions = clients.map(c => ({ value: c.id, label: c.name, isNew: false }));
+  const clientOptions = clients.map((c: any) => ({ value: c.id, label: c.name, isNew: false }));
 
-  const itemOptions = availableItems.map(i => ({
+  const itemOptions = availableItems.map((i: any) => ({
     value: i.id,
     label: i.name,
     itemData: i
@@ -121,7 +121,7 @@ export default function InvoiceEditor() {
         pan: ''
       });
     } else {
-      const client = clients.find(c => c.id === newValue.value);
+      const client = clients.find((c: any) => c.id === newValue.value);
       if (client) {
         setInvoiceTo({
           id: client.id,
@@ -169,7 +169,7 @@ export default function InvoiceEditor() {
     let totalIgst = 0;
     let grandTotal = 0;
 
-    items.forEach(item => {
+    items.forEach((item: any) => {
       const baseAmount = item.quantity * item.rate;
       const itemDiscount = item.discount || 0;
       const amount = baseAmount - itemDiscount;
@@ -282,7 +282,7 @@ export default function InvoiceEditor() {
           amountPaid: amountPaid,
           amountDue: dueAmount,
           gstType: taxType,
-          lineItems: items.map(item => {
+          lineItems: items.map((item: any) => {
             const baseAmount = item.quantity * item.rate;
             const itemDiscount = item.discount || 0;
             const amount = baseAmount - itemDiscount;
@@ -512,7 +512,7 @@ export default function InvoiceEditor() {
                                 isClearable
                                 placeholder="Search Items..."
                                 options={itemOptions}
-                                value={item.itemId ? itemOptions.find(o => o.value === item.itemId) : (item.name ? { label: item.name, value: item.name, __isNew__: true } : null)}
+                                value={item.itemId ? itemOptions.find((o: any) => o.value === item.itemId) : (item.name ? { label: item.name, value: item.name, __isNew__: true } : null)}
                                 onChange={(v) => handleItemChange(index, v)}
                                 styles={{
                                   control: (base) => ({ ...base, fontSize: '10px', minHeight: '24px' }),
