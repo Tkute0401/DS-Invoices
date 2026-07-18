@@ -350,7 +350,7 @@ export default function InvoiceEditor() {
             </select>
           </div>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <button onClick={handleSave} disabled={isSaving} className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition shadow-sm font-medium">
             {isSaving ? 'Saving...' : 'Save to Database'}
           </button>
@@ -360,8 +360,9 @@ export default function InvoiceEditor() {
         </div>
       </div>
 
-      <div id="print-area" ref={printAreaRef} className="relative w-full max-w-[1050px] min-h-[290mm] bg-white shadow-lg print:shadow-none print:max-w-none print:w-[210mm] p-12 text-sm text-gray-800 font-sans mx-auto z-0 overflow-x-hidden">
-        
+      <div className="w-full overflow-x-auto pb-8">
+        <div id="print-area" ref={printAreaRef} className="relative w-full min-w-[800px] max-w-[1050px] min-h-[290mm] bg-white shadow-lg print:shadow-none print:max-w-none print:w-[210mm] p-8 sm:p-12 text-sm text-gray-800 font-sans mx-auto z-0 overflow-x-hidden">
+          
         {/* Watermark */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none z-[-1]">
           <img src="/watermark.png" alt="Watermark" className="w-[70%]" />
@@ -660,6 +661,7 @@ export default function InvoiceEditor() {
 
         </div>
 
+      </div>
       </div>
 
       <style jsx global>{`

@@ -67,15 +67,15 @@ export default async function DashboardPage() {
   const collectionRate = totalInvoiced > 0 ? Math.round((totalCollected / totalInvoiced) * 100) : 0;
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 sm:gap-0">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
-        <div className="flex gap-3">
-          <Link href="/receipts/new" className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 flex items-center text-sm font-medium shadow-sm">
+        <div className="flex gap-3 w-full sm:w-auto">
+          <Link href="/receipts/new" className="flex-1 sm:flex-none justify-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 flex items-center text-sm font-medium shadow-sm">
             <Receipt className="w-4 h-4 mr-2" />
             Record Payment
           </Link>
-          <Link href="/invoices/new" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center text-sm font-medium shadow-sm">
+          <Link href="/invoices/new" className="flex-1 sm:flex-none justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center text-sm font-medium shadow-sm">
             <FileText className="w-4 h-4 mr-2" />
             Create Invoice
           </Link>

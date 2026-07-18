@@ -281,17 +281,18 @@ export default function ReceiptEditor() {
         <div className="flex gap-4 items-center">
           <span className="text-sm font-medium text-gray-700">Receipt Management</span>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <button onClick={handleSave} disabled={isSaving} className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition shadow-sm font-medium">
             {isSaving ? 'Saving...' : 'Save to Database'}
           </button>
           <button onClick={handlePrint} disabled={isGeneratingPdf} className="bg-white border border-gray-300 text-black px-4 py-2 rounded-md hover:bg-gray-50 transition disabled:opacity-50 shadow-sm font-medium">
-            {isGeneratingPdf ? 'Generating PDF...' : 'Print / Download Receipt'}
+            {isGeneratingPdf ? 'Generating PDF...' : 'Print / Download PDF'}
           </button>
         </div>
       </div>
 
-      <div id="print-area" ref={printAreaRef} className="relative w-full max-w-[210mm] min-h-[290mm] bg-white shadow-lg print:shadow-none print:w-full p-12 text-sm text-gray-800 font-sans mx-auto flex flex-col z-0">
+      <div className="w-full overflow-x-auto pb-8">
+        <div id="print-area" ref={printAreaRef} className="relative w-full min-w-[800px] max-w-[210mm] min-h-[290mm] bg-white shadow-lg print:shadow-none print:w-full p-8 sm:p-12 text-sm text-gray-800 font-sans mx-auto flex flex-col z-0">
         
         {/* Watermark */}
         <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none z-[-1]">
@@ -554,6 +555,7 @@ export default function ReceiptEditor() {
           This is an electronically generated document, no signature is required.
         </div>
 
+      </div>
       </div>
 
       <style jsx global>{`

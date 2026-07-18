@@ -172,8 +172,8 @@ export default function PaymentAccountsPage() {
           </div>
         )}
 
-        <div className="bg-white rounded shadow overflow-hidden">
-          <table className="w-full text-left border-collapse">
+        <div className="bg-white rounded shadow overflow-x-auto">
+          <table className="w-full text-left border-collapse min-w-[500px]">
             <thead>
               <tr className="bg-gray-100 border-b border-gray-200 text-gray-700 text-sm">
                 <th className="py-3 px-4 font-semibold">Account Name</th>
