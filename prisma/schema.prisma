@@ -1,0 +1,167 @@
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model BusinessProfile {
+  id                  String   @id @default(cuid())
+  name                String
+  gstin               String?
+  pan                 String?
+  email               String?
+  phone               String?
+  address             String?
+  city                String?
+  state               String?
+  postalCode          String?
+  country             String?
+  logoUrl             String?
+  defaultCurrency     String   @default("INR")
+  defaultTerms        String?
+  bankAccountName     String?
+  bankAccountNumber   String?
+  bankIfsc            String?
+  bankType            String?
+  bankName            String?
+  upiId               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model Client {
+  id              String    @id @default(cuid())
+  name            String
+  gstin           String?
+  pan             String?
+  email           String?
+  phone           String?
+  billingAddress  String?
+  shippingAddress String?
+  placeOfSupply   String?
+  defaultDueDays  Int       @default(15)
+  invoices        Invoice[]
+  receipts        PaymentReceipt[]
+  contacts        Contact[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Contact {
+  id          String   @id @default(cuid())
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId    String
+  name        String
+  email       String?
+  phone       String?
+  isPrimary   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Item {
+  id          String   @id @default(cuid())
+  skuId       String?  @unique
+  name        String
+  description String?
+  hsnSac      String?
+  price       Float
+  gstRate     Float    @default(0)
+  type        String   @default("PRODUCT") // PRODUCT, SERVICE, ONE_TIME
+  category    String?
+  unitCode    String?
+  manageStock Boolean  @default(false)
+  currentStock Float   @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Invoice {
+  id             String             @id @default(cuid())
+  client         Client             @relation(fields: [clientId], references: [id])
+  clientId       String
+  invoiceNumber  String             @unique
+  date           DateTime
+  dueDate        DateTime
+  status         String             @default("DRAFT") // DRAFT, UNPAID, PART_PAID, PAID, OVERDUE, CANCELLED
+  subtotal       Float
+  taxTotal       Float
+  discountTotal  Float              @default(0)
+  additionalCharges Float           @default(0)
+  grandTotal     Float
+  amountPaid     Float              @default(0)
+  amountDue      Float
+  notes          String?
+  terms          String?
+  shippingDetails String?
+  taxType        String             @default("GST") // NONE, GST, VAT, etc.
+  gstType        String             @default("IGST") // IGST, CGST_SGST
+  lineItems      InvoiceLineItem[]
+  paymentRecords PaymentRecord[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+}
+
+model InvoiceLineItem {
+  id          String   @id @default(cuid())
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId   String
+  itemId      String?  
+  itemName    String
+  description String?
+  hsnSac      String?
+  quantity    Float
+  rate        Float
+  discount    Float    @default(0)
+  gstRate     Float
+  cgstAmount  Float    @default(0)
+  sgstAmount  Float    @default(0)
+  igstAmount  Float    @default(0)
+  totalAmount Float
+}
+
+model PaymentReceipt {
+  id                  String          @id @default(cuid())
+  client              Client          @relation(fields: [clientId], references: [id])
+  clientId            String
+  receiptNumber       String          @unique
+  date                DateTime
+  amountReceived      Float
+  transactionCharges  Float           @default(0)
+  tdsAmount           Float           @default(0)
+  notes               String?
+  paymentRecords      PaymentRecord[]
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+}
+
+model PaymentRecord {
+  id               String          @id @default(cuid())
+  receipt          PaymentReceipt  @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+  receiptId        String
+  invoice          Invoice?        @relation(fields: [invoiceId], references: [id])
+  invoiceId        String?
+  paymentAccount   PaymentAccount? @relation(fields: [paymentAccountId], references: [id])
+  paymentAccountId String?
+  amountAllocated  Float
+  paymentMethod    String          // CASH, BANK_TRANSFER, CHEQUE, UPI, CARD
+  referenceNumber  String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+}
+
+model PaymentAccount {
+  id             String          @id @default(cuid())
+  accountName    String
+  accountType    String          // BANK_ACCOUNT, WALLET, UPI
+  bankName       String?
+  accountNumber  String?
+  ifscCode       String?
+  upiId          String?
+  isActive       Boolean         @default(true)
+  paymentRecords PaymentRecord[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
