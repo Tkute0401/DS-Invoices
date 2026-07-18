@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     } = body
 
     // We use a transaction because we need to create the receipt and update the invoice
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       const receipt = await tx.paymentReceipt.create({
         data: {
           clientId,
