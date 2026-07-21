@@ -137,11 +137,9 @@ export function ReceiptsClient({ data }: ReceiptsClientProps) {
         const receipt = row.original
         return (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
+            <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-gray-100 transition-colors focus:outline-none">
+              <span className="sr-only">Open menu</span>
+              <MoreHorizontal className="h-4 w-4 text-gray-500" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => router.push(`/receipts/${receipt.id}`)}>
