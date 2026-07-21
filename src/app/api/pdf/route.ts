@@ -56,7 +56,12 @@ export async function POST(request: Request) {
         </body>
       </html>
     `;
-    await page.setContent(styledHtml, { waitUntil: 'load' });
+    await page.setContent(styledHtml, { waitUntil: 'networkidle0' });
+    
+    // Wait for Tailwind to process and inject styles. Tailwind CDN creates a style tag.
+    // We add a short timeout to ensure the styles are fully applied.
+    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 1500)));
+
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
