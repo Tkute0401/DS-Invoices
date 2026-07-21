@@ -9,6 +9,8 @@ type Client = {
   billingAddress?: string;
   gstin?: string;
   pan?: string;
+  email?: string;
+  phone?: string;
 };
 
 type Invoice = {
