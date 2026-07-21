@@ -11,21 +11,29 @@ export async function POST(request: Request) {
     });
     const page = await browser.newPage();
     
-    // Use the actual request host for the base URL so Puppeteer can reliably fetch CSS and images
-    const host = request.headers.get('host') || 'localhost:3000';
-    const protocol = host.includes('localhost') ? 'http' : 'https';
-    const origin = `${protocol}://${host}`;
-
-    // Inject the exact styles and HTML classes from the frontend
+    // Inject Tailwind CDN with custom font configuration
     const styledHtml = `
       <!DOCTYPE html>
-      <html class="${htmlClasses || ''}">
+      <html>
         <head>
           <meta charset="UTF-8">
-          <base href="${origin}/">
-          ${styles || ''}
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+          <script src="https://cdn.tailwindcss.com"></script>
+          <script>
+            tailwind.config = {
+              theme: {
+                extend: {
+                  fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                  }
+                }
+              }
+            }
+          </script>
           <style>
-            body { background: white; -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
+            body { background: white; -webkit-print-color-adjust: exact; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
             input, textarea, select { 
               border: none !important; 
               resize: none !important; 
@@ -60,9 +68,22 @@ export async function POST(request: Request) {
     `;
     await page.setContent(styledHtml, { waitUntil: 'load' });
 
-    // Wait for network requests (like fonts and images) to finish loading
+    // Wait for Tailwind CSS to generate and fonts to load
     await page.evaluate(async () => {
-      // 1. Wait for web fonts (like Geist) to load so we don't get monospace fallback and broken layout
+      // Wait for Tailwind to inject its style tag
+      await new Promise((resolve) => {
+        const check = () => {
+          const styles = document.querySelectorAll('style');
+          if (styles.length > 1) { 
+            resolve(true);
+          } else {
+            requestAnimationFrame(check);
+          }
+        };
+        check();
+      });
+      
+      // Wait for web fonts (Inter) to load so we don't get monospace fallback and broken layout
       await document.fonts.ready;
       
       // Additional small delay to ensure rendering completes

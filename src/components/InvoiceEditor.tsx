@@ -252,16 +252,12 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
         }
       });
       const html = printAreaRef.current.innerHTML;
-      const htmlClasses = document.documentElement.className.replace(/\bdark\b/g, '').trim();
-      const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
-        .map(el => el.outerHTML)
-        .join('\n');
         
       try {
         const res = await fetch('/api/pdf', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ html, styles, htmlClasses })
+          body: JSON.stringify({ html })
         });
         if (res.ok) {
           const blob = await res.blob();
