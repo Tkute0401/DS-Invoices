@@ -11,12 +11,18 @@ export async function POST(request: Request) {
     });
     const page = await browser.newPage();
     
+    // Use the actual request host for the base URL so Puppeteer can reliably fetch images
+    const host = request.headers.get('host') || 'localhost:3000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const origin = `${protocol}://${host}`;
+
     // Inject Tailwind CDN with custom font configuration
     const styledHtml = `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="UTF-8">
+          <base href="${origin}/">
           <link rel="preconnect" href="https://fonts.googleapis.com">
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
