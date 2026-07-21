@@ -15,7 +15,14 @@ export type ItemData = {
 
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, X, Edit } from "lucide-react"
+import { Plus, X, Edit, MoreHorizontal, Trash } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface ItemsClientProps {
   data: ItemData[]
@@ -115,14 +122,44 @@ export function ItemsClient({ data }: ItemsClientProps) {
       cell: ({ row }) => {
         const item = row.original
         return (
-          <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
-            <Edit className="w-4 h-4 mr-2" />
-            Edit
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleEdit(item)}>
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleDelete(item.id)} variant="destructive">
+                <Trash className="w-4 h-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )
       },
     },
   ], [])
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this item?')) return;
+    try {
+      const res = await fetch(`/api/items/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        router.refresh();
+      } else {
+        alert('Failed to delete item');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('An error occurred');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

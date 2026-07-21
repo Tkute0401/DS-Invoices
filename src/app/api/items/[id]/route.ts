@@ -30,3 +30,16 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     return NextResponse.json({ error: 'Failed to update item' }, { status: 500 })
   }
 }
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const resolvedParams = await params;
+    await prisma.item.delete({
+      where: { id: resolvedParams.id }
+    })
+    return NextResponse.json({ message: 'Item deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting item:', error)
+    return NextResponse.json({ error: 'Failed to delete item' }, { status: 500 })
+  }
+}
