@@ -340,15 +340,15 @@ export default function ReceiptEditor() {
         
         {/* Header Section */}
         <div className="relative w-[calc(100%+6rem)] border-t-8 border-black -mt-12 -ml-12 px-12 pt-12 pb-6 mb-8 flex flex-col">
-          <div className="flex justify-between items-center mb-5">
-            <div className="w-1/3">
+          <div className="flex justify-between items-start mb-5">
+            <div className="w-1/3 mt-[60px]">
               <img src="/header-logo.png" alt="Company Logo" className="w-32 h-auto object-contain" />
             </div>
             <div className="w-1/3 flex justify-center">
-              <h1 className="text-4xl text-black font-black tracking-widest uppercase m-0">RECEIPT</h1>
+              <h1 className="text-4xl text-black font-black tracking-widest uppercase mt-0">RECEIPT</h1>
             </div>
             <div className="w-1/3 flex justify-end">
-              <div className="bg-[#4caf50] text-white px-3 py-1 text-[11px] font-bold uppercase tracking-widest rounded shadow-sm">{receipt.status}</div>
+              <div className="bg-[#4caf50] text-white px-3 py-1 text-[11px] font-bold uppercase tracking-widest rounded mt-[60px] shadow-sm">{receipt.status}</div>
             </div>
           </div>
 
@@ -361,7 +361,7 @@ export default function ReceiptEditor() {
                 digitalsupremacy.in
               </div>
             </div>
-            <div className="w-1/2 flex flex-col items-end gap-1 text-[13px] -mt-25">
+            <div className="w-1/2 flex flex-col items-end gap-1 text-[13px] -mt-[100px]">
               <div className="flex justify-between w-48 border-b border-gray-200 pb-1 mt-1">
                 <span className="text-gray-500 font-semibold uppercase tracking-wider text-xs mt-1">Date</span>
                 <input type="date" value={receipt.date} onChange={e => setReceipt({...receipt, date: e.target.value})} className="font-bold text-black bg-transparent text-right outline-none max-w-[120px]" />
