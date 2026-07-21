@@ -72,28 +72,67 @@ export default function ReceiptEditor() {
   const [allocations, setAllocations] = useState<Allocation[]>([]);
 
   useEffect(() => {
-    fetch('/api/business-profile').then(res => res.json()).then(data => {
-      setBusinessProfile(data);
-      if (data && !data.error) {
+    const fetchData = async () => {
+      const [bpRes, paRes, clRes, invRes] = await Promise.all([
+        fetch('/api/business-profile').then(res => res.json()),
+        fetch('/api/payment-accounts').then(res => res.json()),
+        fetch('/api/clients').then(res => res.json()),
+        fetch('/api/invoices').then(res => res.json())
+      ]);
+
+      setBusinessProfile(bpRes);
+      if (bpRes && !bpRes.error) {
         setIssuedBy({
-          name: data.name || '',
-          address: data.address || '',
-          gstin: data.gstin || '',
-          pan: data.pan || '',
-          email: data.email || '',
-          phone: data.phone || ''
+          name: bpRes.name || '',
+          address: bpRes.address || '',
+          gstin: bpRes.gstin || '',
+          pan: bpRes.pan || '',
+          email: bpRes.email || '',
+          phone: bpRes.phone || ''
         });
       }
-    });
-    fetch('/api/payment-accounts').then(res => res.json()).then(data => {
-      setPaymentAccounts(data);
-      if (data && data.length > 0) {
-        setReceipt(prev => ({ ...prev, paymentAccountId: data[0].id }));
+
+      setPaymentAccounts(paRes);
+      if (paRes && paRes.length > 0) {
+        setReceipt(prev => ({ ...prev, paymentAccountId: paRes[0].id }));
       }
-    });
-    fetch('/api/clients').then(res => res.json()).then(data => {
-      setClients(data);
-    });
+
+      setClients(clRes);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const invId = urlParams.get('invoiceId');
+      
+      if (invId) {
+        const invoice = invRes.find((inv: any) => inv.id === invId);
+        if (invoice) {
+          const client = clRes.find((c: any) => c.id === invoice.clientId);
+          if (client) {
+            setSelectedClient({ value: client.id, label: client.name, isNew: false });
+            setIssuedTo({
+              id: client.id,
+              name: client.name,
+              address: client.billingAddress || '',
+              gstin: client.gstin || '',
+              pan: client.pan || ''
+            });
+
+            const clientOpenInvoices = invRes.filter((inv: any) => inv.clientId === client.id && inv.amountDue > 0);
+            setOpenInvoices(clientOpenInvoices);
+            
+            const newAllocations = clientOpenInvoices.map((inv: any) => ({
+              invoiceId: inv.id,
+              invoiceNumber: inv.invoiceNumber,
+              amountDue: inv.amountDue,
+              amountAllocated: inv.id === invId ? inv.amountDue : 0
+            }));
+            setAllocations(newAllocations);
+            setReceipt(prev => ({ ...prev, amountReceived: invoice.amountDue }));
+          }
+        }
+      }
+    };
+    
+    fetchData();
   }, []);
 
   const clientOptions = clients.map((c: any) => ({ value: c.id, label: c.name, isNew: false }));
