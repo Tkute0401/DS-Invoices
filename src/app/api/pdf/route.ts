@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const { html } = await request.json();
+    const { html, styles } = await request.json();
     
     const browser = await puppeteer.launch({
       headless: true,
@@ -13,14 +13,14 @@ export async function POST(request: Request) {
     
     const origin = new URL(request.url).origin;
 
-    // Inject Tailwind CDN and base styles to ensure the PDF looks exactly like the web page
+    // Inject the actual Next.js app styles to ensure the PDF looks exactly like the web page
     const styledHtml = `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="UTF-8">
           <base href="${origin}/">
-          <script src="https://cdn.tailwindcss.com"></script>
+          ${styles || ''}
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
             body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; }
@@ -57,10 +57,6 @@ export async function POST(request: Request) {
       </html>
     `;
     await page.setContent(styledHtml, { waitUntil: 'load' });
-    
-    // Wait for Tailwind to process and inject styles. Tailwind CDN creates a style tag.
-    // We add a short timeout to ensure the styles are fully applied.
-    await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 1500)));
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
