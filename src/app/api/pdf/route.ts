@@ -56,7 +56,7 @@ export async function POST(request: Request) {
         </body>
       </html>
     `;
-    await page.setContent(styledHtml, { waitUntil: 'networkidle0' });
+    await page.setContent(styledHtml, { waitUntil: 'load' });
     
     // Wait for Tailwind to process and inject styles. Tailwind CDN creates a style tag.
     // We add a short timeout to ensure the styles are fully applied.
