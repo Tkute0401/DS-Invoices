@@ -16,17 +16,17 @@ export async function POST(request: Request) {
     const port = process.env.PORT || 3000;
     const origin = `http://localhost:${port}`;
 
-    // Inject the actual Next.js app styles to ensure the PDF looks exactly like the web page
+    // Inject Tailwind CDN and base styles to ensure the PDF looks exactly like the web page
     const styledHtml = `
       <!DOCTYPE html>
       <html>
         <head>
           <meta charset="UTF-8">
           <base href="${origin}/">
-          ${styles || ''}
+          <script src="https://cdn.tailwindcss.com"></script>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-            body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; }
+            body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; background: white; }
             input, textarea, select { 
               border: none !important; 
               resize: none !important; 
@@ -53,13 +53,37 @@ export async function POST(request: Request) {
           </style>
         </head>
         <body class="bg-white" style="margin: 0; padding: 0;">
-          <div style="width: 210mm; margin: 0 auto; zoom: 0.96; transform-origin: top center;">
+          <div class="relative w-[210mm] bg-white text-sm text-gray-800 font-sans mx-auto overflow-x-hidden" style="zoom: 0.96; transform-origin: top center;">
             ${html}
           </div>
         </body>
       </html>
     `;
     await page.setContent(styledHtml, { waitUntil: 'load' });
+
+    // Wait specifically for Tailwind to finish generating styles
+    await page.evaluate(async () => {
+      await new Promise<void>((resolve) => {
+        const check = () => {
+          const styles = document.querySelectorAll('style');
+          for (let s of Array.from(styles)) {
+            // Check if Tailwind has generated its styles by looking for a known class
+            if (s.innerHTML.includes('.flex')) {
+              resolve();
+              return true;
+            }
+          }
+          return false;
+        };
+        if (check()) return;
+        const observer = new MutationObserver(() => {
+          if (check()) observer.disconnect();
+        });
+        observer.observe(document.head, { childList: true, subtree: true });
+        // Fallback timeout in case Tailwind fails
+        setTimeout(resolve, 5000);
+      });
+    });
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
