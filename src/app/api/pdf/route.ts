@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const { html, styles } = await request.json();
+    const { html, styles, htmlClasses } = await request.json();
     
     const browser = await puppeteer.launch({
       headless: true,
@@ -16,17 +16,16 @@ export async function POST(request: Request) {
     const port = process.env.PORT || 3000;
     const origin = `http://localhost:${port}`;
 
-    // Inject Tailwind CDN and base styles to ensure the PDF looks exactly like the web page
+    // Inject the exact styles and HTML classes from the frontend
     const styledHtml = `
       <!DOCTYPE html>
-      <html>
+      <html class="${htmlClasses || ''}">
         <head>
           <meta charset="UTF-8">
           <base href="${origin}/">
-          <script src="https://cdn.tailwindcss.com"></script>
+          ${styles || ''}
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-            body { font-family: 'Inter', sans-serif; -webkit-print-color-adjust: exact; background: white; }
+            body { background: white; -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
             input, textarea, select { 
               border: none !important; 
               resize: none !important; 
@@ -52,7 +51,7 @@ export async function POST(request: Request) {
             }
           </style>
         </head>
-        <body class="bg-white" style="margin: 0; padding: 0;">
+        <body class="bg-white">
           <div class="relative w-[210mm] bg-white text-sm text-gray-800 font-sans mx-auto overflow-x-hidden" style="zoom: 0.96; transform-origin: top center;">
             ${html}
           </div>
@@ -61,32 +60,10 @@ export async function POST(request: Request) {
     `;
     await page.setContent(styledHtml, { waitUntil: 'load' });
 
-    // Wait specifically for Tailwind to finish generating styles AND for fonts to load
+    // Wait for network requests (like fonts and images) to finish loading
     await page.evaluate(async () => {
-      // 1. Wait for web fonts (Inter) to load so we don't get monospace fallback and broken layout
+      // 1. Wait for web fonts (like Geist) to load so we don't get monospace fallback and broken layout
       await document.fonts.ready;
-
-      // 2. Wait for Tailwind CDN to inject styles
-      await new Promise<void>((resolve) => {
-        const check = () => {
-          const styles = document.querySelectorAll('style');
-          for (let s of Array.from(styles)) {
-            // Check if Tailwind has generated its styles by looking for a known class
-            if (s.innerHTML.includes('.flex')) {
-              resolve();
-              return true;
-            }
-          }
-          return false;
-        };
-        if (check()) return;
-        const observer = new MutationObserver(() => {
-          if (check()) observer.disconnect();
-        });
-        observer.observe(document.head, { childList: true, subtree: true });
-        // Fallback timeout in case Tailwind fails
-        setTimeout(resolve, 5000);
-      });
       
       // Additional small delay to ensure rendering completes
       await new Promise(r => setTimeout(r, 500));
