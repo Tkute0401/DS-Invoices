@@ -13,71 +13,9 @@ export type ItemData = {
   price: number
 }
 
-export const columns: ColumnDef<ItemData>[] = [
-  {
-    accessorKey: "skuId",
-    header: "SKU ID",
-    cell: ({ row }) => <div className="font-medium text-gray-500">{row.getValue("skuId") || "-"}</div>,
-  },
-  {
-    accessorKey: "name",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-    cell: ({ row }) => <div className="font-medium">{row.getValue("name")}</div>,
-  },
-  {
-    accessorKey: "type",
-    header: "Type",
-    cell: ({ row }) => {
-      const type = row.getValue("type") as string
-      return (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-          type === 'PRODUCT' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-        }`}>
-          {type}
-        </span>
-      )
-    },
-  },
-  {
-    accessorKey: "price",
-    header: ({ column }) => {
-      return (
-        <div className="text-right">
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Price
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        </div>
-      )
-    },
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("price"))
-      const formatted = new Intl.NumberFormat("en-IN", {
-        style: "currency",
-        currency: "INR",
-      }).format(amount)
- 
-      return <div className="text-right font-medium">{formatted}</div>
-    },
-  },
-]
-
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Plus, X } from "lucide-react"
+import { Plus, X, Edit } from "lucide-react"
 
 interface ItemsClientProps {
   data: ItemData[]
@@ -87,6 +25,7 @@ export function ItemsClient({ data }: ItemsClientProps) {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     skuId: "",
@@ -94,21 +33,115 @@ export function ItemsClient({ data }: ItemsClientProps) {
     price: ""
   })
 
+  const handleEdit = (item: ItemData) => {
+    setEditId(item.id)
+    setFormData({
+      name: item.name,
+      skuId: item.skuId || "",
+      type: item.type || "PRODUCT",
+      price: item.price.toString()
+    })
+    setIsOpen(true)
+  }
+
+  const handleAddNew = () => {
+    setEditId(null)
+    setFormData({ name: "", skuId: "", type: "PRODUCT", price: "" })
+    setIsOpen(true)
+  }
+
+  const columns = useMemo<ColumnDef<ItemData>[]>(() => [
+    {
+      accessorKey: "skuId",
+      header: "SKU ID",
+      cell: ({ row }) => <div className="font-medium text-gray-500">{row.getValue("skuId") || "-"}</div>,
+    },
+    {
+      accessorKey: "name",
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            Name
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+      cell: ({ row }) => <div className="font-medium">{row.getValue("name")}</div>,
+    },
+    {
+      accessorKey: "type",
+      header: "Type",
+      cell: ({ row }) => {
+        const type = row.getValue("type") as string
+        return (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            type === 'PRODUCT' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+          }`}>
+            {type}
+          </span>
+        )
+      },
+    },
+    {
+      accessorKey: "price",
+      header: ({ column }) => {
+        return (
+          <div className="text-right">
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Price
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        )
+      },
+      cell: ({ row }) => {
+        const amount = parseFloat(row.getValue("price"))
+        const formatted = new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
+        }).format(amount)
+   
+        return <div className="text-right font-medium">{formatted}</div>
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const item = row.original
+        return (
+          <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}>
+            <Edit className="w-4 h-4 mr-2" />
+            Edit
+          </Button>
+        )
+      },
+    },
+  ], [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     try {
-      const res = await fetch("/api/items", {
-        method: "POST",
+      const url = editId ? `/api/items/${editId}` : "/api/items"
+      const method = editId ? "PUT" : "POST"
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
       })
       if (res.ok) {
         setIsOpen(false)
         setFormData({ name: "", skuId: "", type: "PRODUCT", price: "" })
+        setEditId(null)
         router.refresh()
       } else {
-        alert("Failed to create item.")
+        alert(`Failed to ${editId ? 'update' : 'create'} item.`)
       }
     } catch (err) {
       console.error(err)
@@ -123,7 +156,7 @@ export function ItemsClient({ data }: ItemsClientProps) {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Items / Inventory</h1>
         <button 
-          onClick={() => setIsOpen(true)}
+          onClick={handleAddNew}
           className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition flex items-center shadow-sm"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -142,7 +175,7 @@ export function ItemsClient({ data }: ItemsClientProps) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
             <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-lg font-bold text-gray-900">Add New Item</h2>
+              <h2 className="text-lg font-bold text-gray-900">{editId ? 'Edit Item' : 'Add New Item'}</h2>
               <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-gray-700">
                 <X className="w-5 h-5" />
               </button>
@@ -207,7 +240,7 @@ export function ItemsClient({ data }: ItemsClientProps) {
                   disabled={isSubmitting}
                   className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Saving...' : 'Save Item'}
+                  {isSubmitting ? 'Saving...' : editId ? 'Update Item' : 'Save Item'}
                 </button>
               </div>
             </form>
