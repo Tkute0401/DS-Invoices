@@ -340,15 +340,15 @@ export default function ReceiptEditor() {
         
         {/* Header Section */}
         <div className="relative w-[calc(100%+6rem)] border-t-8 border-black -mt-12 -ml-12 px-12 pt-12 pb-6 mb-8 flex flex-col">
-          <div className="flex justify-between items-start mb-5">
-            <div className="w-1/3 mt-15">
+          <div className="flex justify-between items-center mb-5">
+            <div className="w-1/3">
               <img src="/header-logo.png" alt="Company Logo" className="w-32 h-auto object-contain" />
             </div>
             <div className="w-1/3 flex justify-center">
-              <h1 className="text-4xl text-black font-black tracking-widest uppercase mt-0">RECEIPT</h1>
+              <h1 className="text-4xl text-black font-black tracking-widest uppercase m-0">RECEIPT</h1>
             </div>
             <div className="w-1/3 flex justify-end">
-              <div className="bg-[#4caf50] text-white px-3 py-1 text-[11px] font-bold uppercase tracking-widest rounded mt-15 shadow-sm">{receipt.status}</div>
+              <div className="bg-[#4caf50] text-white px-3 py-1 text-[11px] font-bold uppercase tracking-widest rounded shadow-sm">{receipt.status}</div>
             </div>
           </div>
 
