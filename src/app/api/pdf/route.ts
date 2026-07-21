@@ -11,7 +11,10 @@ export async function POST(request: Request) {
     });
     const page = await browser.newPage();
     
-    const origin = new URL(request.url).origin;
+    // Railway containers cannot make requests to their own public URL (no hairpin NAT).
+    // So we tell Puppeteer to fetch resources directly from the local Next.js server instance.
+    const port = process.env.PORT || 3000;
+    const origin = `http://localhost:${port}`;
 
     // Inject the actual Next.js app styles to ensure the PDF looks exactly like the web page
     const styledHtml = `
