@@ -18,7 +18,7 @@ type Item = {
   price: number;
 };
 
-export default function InvoiceEditor() {
+export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
   const [isSaving, setIsSaving] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const printAreaRef = useRef<HTMLDivElement>(null);
@@ -72,29 +72,67 @@ export default function InvoiceEditor() {
   const [taxType, setTaxType] = useState('IGST'); // IGST or CGST_SGST
 
   useEffect(() => {
-    // Fetch business profile
-    fetch('/api/business-profile').then(res => res.json()).then(data => {
-      setBusinessProfile(data);
-      if (data && !data.error) {
+    const initData = async () => {
+      const [bpRes, clRes, itemRes] = await Promise.all([
+        fetch('/api/business-profile').then(res => res.json()),
+        fetch('/api/clients').then(res => res.json()),
+        fetch('/api/items').then(res => res.json())
+      ]);
+
+      setBusinessProfile(bpRes);
+      if (bpRes && !bpRes.error) {
         setInvoiceBy({
-          name: data.name || '',
-          address: data.address || '',
-          gstin: data.gstin || '',
-          pan: data.pan || '',
-          email: data.email || '',
-          phone: data.phone || ''
+          name: bpRes.name || '',
+          address: bpRes.address || '',
+          gstin: bpRes.gstin || '',
+          pan: bpRes.pan || '',
+          email: bpRes.email || '',
+          phone: bpRes.phone || ''
         });
       }
-    });
-    // Fetch clients
-    fetch('/api/clients').then(res => res.json()).then(data => {
-      setClients(data);
-    });
-    // Fetch items
-    fetch('/api/items').then(res => res.json()).then(data => {
-      setAvailableItems(data);
-    });
-  }, []);
+      setClients(clRes);
+      setAvailableItems(itemRes);
+
+      if (invoiceId) {
+        try {
+          const invData = await fetch(`/api/invoices/${invoiceId}`).then(res => res.json());
+          if (invData && !invData.error) {
+            setInvoiceNumber(invData.invoiceNumber);
+            setDate(new Date(invData.date).toISOString().split('T')[0]);
+            setDueDate(new Date(invData.dueDate).toISOString().split('T')[0]);
+            setAdditionalCharges(invData.additionalCharges || 0);
+            setTaxType(invData.taxType || 'GST');
+            
+            if (invData.client) {
+              setSelectedClient({ value: invData.client.id, label: invData.client.name, isNew: false });
+              setInvoiceTo({
+                id: invData.client.id,
+                name: invData.client.name,
+                address: invData.client.billingAddress || '',
+                gstin: invData.client.gstin || '',
+                pan: invData.client.pan || ''
+              });
+            }
+
+            if (invData.lineItems && invData.lineItems.length > 0) {
+              setItems(invData.lineItems.map((item: any) => ({
+                id: item.id || Date.now().toString() + Math.random(),
+                name: item.itemName,
+                gstRate: item.gstRate,
+                quantity: item.quantity,
+                rate: item.rate,
+                discount: item.discount,
+                itemId: item.itemId || ''
+              })));
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching invoice:", error);
+        }
+      }
+    };
+    initData();
+  }, [invoiceId]);
 
   // Format clients for react-select
   const clientOptions = clients.map((c: any) => ({ value: c.id, label: c.name, isNew: false }));
@@ -266,8 +304,11 @@ export default function InvoiceEditor() {
       }
 
       // Save the invoice
-      const res = await fetch('/api/invoices', {
-        method: 'POST',
+      const url = invoiceId ? `/api/invoices/${invoiceId}` : '/api/invoices';
+      const method = invoiceId ? 'PUT' : 'POST';
+      
+      const res = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clientId: clientId,
