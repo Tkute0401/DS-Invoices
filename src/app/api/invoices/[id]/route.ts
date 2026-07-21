@@ -64,7 +64,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const { 
       clientId, invoiceNumber, date, dueDate, status, subtotal, 
       taxTotal, discountTotal, additionalCharges, grandTotal, 
-      notes, terms, shippingDetails, taxType, gstType, lineItems 
+      notes, terms, shippingDetails, taxType, gstType, countryOfSupply, placeOfSupply, lineItems 
     } = body;
 
     // Verify invoice exists
@@ -114,6 +114,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
           shippingDetails,
           taxType,
           gstType,
+          countryOfSupply,
+          placeOfSupply,
           lineItems: {
             create: lineItems.map((item: any) => ({
               itemId: item.itemId || null,

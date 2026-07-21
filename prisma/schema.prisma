@@ -98,6 +98,8 @@ model Invoice {
   shippingDetails String?
   taxType        String             @default("GST") // NONE, GST, VAT, etc.
   gstType        String             @default("IGST") // IGST, CGST_SGST
+  countryOfSupply String?           @default("India")
+  placeOfSupply  String?
   lineItems      InvoiceLineItem[]
   paymentRecords PaymentRecord[]
   createdAt      DateTime           @default(now())

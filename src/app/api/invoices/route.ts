@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const { 
       clientId, invoiceNumber, date, dueDate, status, subtotal, 
       taxTotal, discountTotal, additionalCharges, grandTotal, amountPaid, amountDue, 
-      notes, terms, shippingDetails, taxType, gstType, lineItems 
+      notes, terms, shippingDetails, taxType, gstType, countryOfSupply, placeOfSupply, lineItems 
     } = body
 
     const invoice = await prisma.invoice.create({
@@ -45,6 +45,8 @@ export async function POST(req: Request) {
         shippingDetails,
         taxType,
         gstType,
+        countryOfSupply,
+        placeOfSupply,
         lineItems: {
           create: lineItems.map((item: any) => ({
             itemId: item.itemId,

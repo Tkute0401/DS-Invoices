@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
 import CreatableSelect from 'react-select/creatable';
+import { numberToIndianWords } from '@/lib/utils';
 
 type Client = {
   id: string;
@@ -40,7 +42,9 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
     name: '',
     address: '',
     gstin: '',
-    pan: ''
+    pan: '',
+    email: '',
+    phone: ''
   });
 
   const [businessProfile, setBusinessProfile] = useState<any>(null);
@@ -70,6 +74,8 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
 
   // Tax Settings
   const [taxType, setTaxType] = useState('IGST'); // IGST or CGST_SGST
+  const [countryOfSupply, setCountryOfSupply] = useState('India');
+  const [placeOfSupply, setPlaceOfSupply] = useState('Maharashtra (27)');
 
   useEffect(() => {
     const initData = async () => {
@@ -102,6 +108,8 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
             setDueDate(new Date(invData.dueDate).toISOString().split('T')[0]);
             setAdditionalCharges(invData.additionalCharges || 0);
             setTaxType(invData.taxType || 'GST');
+            setCountryOfSupply(invData.countryOfSupply || 'India');
+            setPlaceOfSupply(invData.placeOfSupply || '');
             
             if (invData.client) {
               setSelectedClient({ value: invData.client.id, label: invData.client.name, isNew: false });
@@ -110,7 +118,9 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
                 name: invData.client.name,
                 address: invData.client.billingAddress || '',
                 gstin: invData.client.gstin || '',
-                pan: invData.client.pan || ''
+                pan: invData.client.pan || '',
+                email: invData.client.email || '',
+                phone: invData.client.phone || ''
               });
             }
 
@@ -297,7 +307,9 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
             name: invoiceTo.name,
             billingAddress: invoiceTo.address,
             gstin: invoiceTo.gstin,
-            pan: invoiceTo.pan
+            pan: invoiceTo.pan,
+            email: invoiceTo.email,
+            phone: invoiceTo.phone
           })
         });
         const client = await clientRes.json();
@@ -324,6 +336,8 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
           amountPaid: amountPaid,
           amountDue: dueAmount,
           gstType: taxType,
+          countryOfSupply: countryOfSupply,
+          placeOfSupply: placeOfSupply,
           lineItems: items.map((item: any) => {
             const baseAmount = item.quantity * item.rate;
             const itemDiscount = item.discount || 0;
@@ -460,6 +474,10 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
               <input value={invoiceBy.gstin} onChange={e => setInvoiceBy({ ...invoiceBy, gstin: e.target.value })} className="font-medium bg-transparent outline-none border-b border-transparent hover:border-gray-300 focus:border-black w-full" />
               <span className="font-semibold text-gray-500 uppercase text-[11px] tracking-wider mt-1">PAN</span>
               <input value={invoiceBy.pan} onChange={e => setInvoiceBy({ ...invoiceBy, pan: e.target.value })} className="font-medium bg-transparent outline-none border-b border-transparent hover:border-gray-300 focus:border-black w-full" />
+              <span className="font-semibold text-gray-500 uppercase text-[11px] tracking-wider mt-1">Email</span>
+              <input value={invoiceBy.email} onChange={e => setInvoiceBy({ ...invoiceBy, email: e.target.value })} placeholder="Email" className="font-medium bg-transparent outline-none border-b border-transparent hover:border-gray-300 focus:border-black w-full" />
+              <span className="font-semibold text-gray-500 uppercase text-[11px] tracking-wider mt-1">Phone</span>
+              <input value={invoiceBy.phone} onChange={e => setInvoiceBy({ ...invoiceBy, phone: e.target.value })} placeholder="Phone" className="font-medium bg-transparent outline-none border-b border-transparent hover:border-gray-300 focus:border-black w-full" />
             </div>
           </div>
 
@@ -489,7 +507,23 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
               <input value={invoiceTo.gstin} onChange={e => setInvoiceTo({ ...invoiceTo, gstin: e.target.value })} placeholder="GSTIN" className="font-medium bg-transparent outline-none border-b border-transparent hover:border-gray-300 focus:border-black w-full" />
               <span className="font-semibold text-gray-500 uppercase text-[11px] tracking-wider mt-1">PAN</span>
               <input value={invoiceTo.pan} onChange={e => setInvoiceTo({ ...invoiceTo, pan: e.target.value })} placeholder="PAN" className="font-medium bg-transparent outline-none border-b border-transparent hover:border-gray-300 focus:border-black w-full" />
+              <span className="font-semibold text-gray-500 uppercase text-[11px] tracking-wider mt-1">Email</span>
+              <input value={invoiceTo.email} onChange={e => setInvoiceTo({ ...invoiceTo, email: e.target.value })} placeholder="Email" className="font-medium bg-transparent outline-none border-b border-transparent hover:border-gray-300 focus:border-black w-full" />
+              <span className="font-semibold text-gray-500 uppercase text-[11px] tracking-wider mt-1">Phone</span>
+              <input value={invoiceTo.phone} onChange={e => setInvoiceTo({ ...invoiceTo, phone: e.target.value })} placeholder="Phone" className="font-medium bg-transparent outline-none border-b border-transparent hover:border-gray-300 focus:border-black w-full" />
             </div>
+          </div>
+        </div>
+
+        {/* Supply Details */}
+        <div className="flex justify-between items-center mb-2 px-4 text-[11px] font-semibold text-black relative z-10">
+          <div className="flex items-center">
+            <span className="text-gray-900 font-bold">Country of Supply:</span>
+            <input value={countryOfSupply} onChange={e => setCountryOfSupply(e.target.value)} className="bg-transparent outline-none border-b border-transparent hover:border-gray-300 focus:border-black ml-1 font-medium w-32" />
+          </div>
+          <div className="flex items-center">
+            <span className="text-gray-900 font-bold">Place of Supply:</span>
+            <input value={placeOfSupply} onChange={e => setPlaceOfSupply(e.target.value)} className="bg-transparent outline-none border-b border-transparent hover:border-gray-300 focus:border-black ml-1 font-medium w-40 text-right" />
           </div>
         </div>
 
@@ -607,6 +641,11 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
             </tbody>
           </table>
           <button onClick={addItem} className="mt-4 text-sm font-semibold text-black hover:underline print:hidden">+ Add Line Item</button>
+        </div>
+        
+        {/* Total in Words */}
+        <div className="mb-6 relative z-10 text-[11px] font-bold text-black uppercase tracking-wide">
+          Total (in words) : {numberToIndianWords(totals.grandTotal)}
         </div>
 
         {/* Bottom Section */}
