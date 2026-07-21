@@ -156,7 +156,7 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
   const handleClientChange = (newValue: any, actionMeta: any) => {
     setSelectedClient(newValue);
     if (!newValue) {
-      setInvoiceTo({ id: '', name: '', address: '', gstin: '', pan: '' });
+      setInvoiceTo({ id: '', name: '', address: '', gstin: '', pan: '', email: '', phone: '' });
       return;
     }
 
@@ -166,7 +166,9 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
         name: newValue.value,
         address: '',
         gstin: '',
-        pan: ''
+        pan: '',
+        email: '',
+        phone: ''
       });
     } else {
       const client = clients.find((c: any) => c.id === newValue.value);
@@ -176,7 +178,9 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
           name: client.name,
           address: client.billingAddress || '',
           gstin: client.gstin || '',
-          pan: client.pan || ''
+          pan: client.pan || '',
+          email: client.email || '',
+          phone: client.phone || ''
         });
         
         // Auto-detect Place of Supply based on GSTIN (First 2 digits)
