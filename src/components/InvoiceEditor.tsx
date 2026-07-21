@@ -252,7 +252,7 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
         }
       });
       const html = printAreaRef.current.innerHTML;
-      const htmlClasses = document.documentElement.className;
+      const htmlClasses = document.documentElement.className.replace(/\bdark\b/g, '').trim();
       const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
         .map(el => el.outerHTML)
         .join('\n');

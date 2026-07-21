@@ -11,10 +11,10 @@ export async function POST(request: Request) {
     });
     const page = await browser.newPage();
     
-    // Railway containers cannot make requests to their own public URL (no hairpin NAT).
-    // So we tell Puppeteer to fetch resources directly from the local Next.js server instance.
-    const port = process.env.PORT || 3000;
-    const origin = `http://localhost:${port}`;
+    // Use the actual request host for the base URL so Puppeteer can reliably fetch CSS and images
+    const host = request.headers.get('host') || 'localhost:3000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const origin = `${protocol}://${host}`;
 
     // Inject the exact styles and HTML classes from the frontend
     const styledHtml = `
