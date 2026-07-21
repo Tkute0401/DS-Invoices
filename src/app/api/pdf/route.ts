@@ -61,8 +61,12 @@ export async function POST(request: Request) {
     `;
     await page.setContent(styledHtml, { waitUntil: 'load' });
 
-    // Wait specifically for Tailwind to finish generating styles
+    // Wait specifically for Tailwind to finish generating styles AND for fonts to load
     await page.evaluate(async () => {
+      // 1. Wait for web fonts (Inter) to load so we don't get monospace fallback and broken layout
+      await document.fonts.ready;
+
+      // 2. Wait for Tailwind CDN to inject styles
       await new Promise<void>((resolve) => {
         const check = () => {
           const styles = document.querySelectorAll('style');
@@ -83,6 +87,9 @@ export async function POST(request: Request) {
         // Fallback timeout in case Tailwind fails
         setTimeout(resolve, 5000);
       });
+      
+      // Additional small delay to ensure rendering completes
+      await new Promise(r => setTimeout(r, 500));
     });
 
     const pdfBuffer = await page.pdf({
