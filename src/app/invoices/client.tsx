@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, MoreHorizontal, Trash, Copy, Edit, CreditCard } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal, Trash, Copy, Edit, CreditCard, Download } from "lucide-react"
 import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { useMemo } from "react"
@@ -164,6 +164,10 @@ export function InvoicesClient({ data }: InvoicesClientProps) {
               <DropdownMenuItem onClick={() => router.push(`/invoices/${invoice.id}`)}>
                 <Edit className="w-4 h-4 mr-2" />
                 View / Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => window.open(`/api/pdf?type=invoice&id=${invoice.id}`, '_blank')}>
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => router.push(`/receipts/new?invoiceId=${invoice.id}`)}>
                 <CreditCard className="w-4 h-4 mr-2" />

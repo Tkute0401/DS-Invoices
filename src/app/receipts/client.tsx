@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, MoreHorizontal, Trash, Copy, Edit } from "lucide-react"
+import { ArrowUpDown, MoreHorizontal, Trash, Copy, Edit, Download } from "lucide-react"
 import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { useMemo } from "react"
@@ -145,6 +145,10 @@ export function ReceiptsClient({ data }: ReceiptsClientProps) {
               <DropdownMenuItem onClick={() => router.push(`/receipts/${receipt.id}`)}>
                 <Edit className="w-4 h-4 mr-2" />
                 View / Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => window.open(`/api/pdf?type=receipt&id=${receipt.id}`, '_blank')}>
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleClone(receipt.id)}>
                 <Copy className="w-4 h-4 mr-2" />
