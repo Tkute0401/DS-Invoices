@@ -59,6 +59,8 @@ model Contact {
   isPrimary   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([clientId])
 }
 
 model Item {
@@ -104,6 +106,8 @@ model Invoice {
   paymentRecords PaymentRecord[]
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
+
+  @@index([clientId])
 }
 
 model InvoiceLineItem {
@@ -122,6 +126,8 @@ model InvoiceLineItem {
   sgstAmount  Float    @default(0)
   igstAmount  Float    @default(0)
   totalAmount Float
+
+  @@index([invoiceId])
 }
 
 model PaymentReceipt {
@@ -137,6 +143,8 @@ model PaymentReceipt {
   paymentRecords      PaymentRecord[]
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
+
+  @@index([clientId])
 }
 
 model PaymentRecord {
@@ -152,6 +160,10 @@ model PaymentRecord {
   referenceNumber  String?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
+
+  @@index([receiptId])
+  @@index([invoiceId])
+  @@index([paymentAccountId])
 }
 
 model PaymentAccount {

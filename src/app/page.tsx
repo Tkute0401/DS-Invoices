@@ -15,53 +15,61 @@ import prisma from '@/lib/prisma';
 import { format } from 'date-fns';
 
 export default async function DashboardPage() {
-  const invoices = await prisma.invoice.findMany({
-    where: { status: { not: 'DELETED' } },
-    select: { 
-      id: true,
-      invoiceNumber: true,
-      amountDue: true, 
-      amountPaid: true, 
-      grandTotal: true,
-      status: true,
-      createdAt: true,
-      client: { select: { name: true } }
-    },
-    orderBy: { createdAt: 'desc' }
-  });
+  const [
+    recentInvoices,
+    invoiceTotals,
+    statusCounts,
+    receipts,
+    clientsCount,
+    itemsCount
+  ] = await Promise.all([
+    prisma.invoice.findMany({
+      where: { status: { not: 'DELETED' } },
+      select: { 
+        id: true, invoiceNumber: true, amountDue: true, amountPaid: true, 
+        grandTotal: true, status: true, createdAt: true,
+        client: { select: { name: true } }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    }),
+    prisma.invoice.aggregate({
+      where: { status: { not: 'DELETED' } },
+      _sum: { amountDue: true, amountPaid: true, grandTotal: true },
+      _count: true
+    }),
+    prisma.invoice.groupBy({
+      by: ['status'],
+      where: { status: { not: 'DELETED' } },
+      _count: true
+    }),
+    prisma.paymentReceipt.findMany({
+      select: {
+        id: true, receiptNumber: true, amountReceived: true, createdAt: true,
+        client: { select: { name: true } }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5
+    }),
+    prisma.client.count(),
+    prisma.item.count()
+  ]);
 
-  const recentInvoices = invoices.slice(0, 5);
+  const totalDue = invoiceTotals._sum.amountDue || 0;
+  const totalCollected = invoiceTotals._sum.amountPaid || 0;
+  const totalInvoiced = invoiceTotals._sum.grandTotal || 0;
+  const totalInvoiceCount = invoiceTotals._count || 0;
 
-  const receipts = await prisma.paymentReceipt.findMany({
-    select: {
-      id: true,
-      receiptNumber: true,
-      amountReceived: true,
-      createdAt: true,
-      client: { select: { name: true } }
-    },
-    orderBy: { createdAt: 'desc' },
-    take: 5
-  });
-
-  const clientsCount = await prisma.client.count();
-  const itemsCount = await prisma.item.count();
-
-  let totalDue = 0;
-  let totalCollected = 0;
-  let totalInvoiced = 0;
   let overdueCount = 0;
   let paidCount = 0;
   let unpaidCount = 0;
 
-  invoices.forEach((inv: any) => {
-    totalDue += inv.amountDue;
-    totalCollected += inv.amountPaid;
-    totalInvoiced += inv.grandTotal;
-    
-    if (inv.status === 'OVERDUE') overdueCount++;
-    if (inv.status === 'PAID') paidCount++;
-    if (inv.status === 'UNPAID' || inv.status === 'PART_PAID') unpaidCount++;
+  statusCounts.forEach((statusGroup: any) => {
+    if (statusGroup.status === 'OVERDUE') overdueCount = statusGroup._count;
+    if (statusGroup.status === 'PAID') paidCount = statusGroup._count;
+    if (statusGroup.status === 'UNPAID' || statusGroup.status === 'PART_PAID') {
+      unpaidCount += statusGroup._count;
+    }
   });
 
   const collectionRate = totalInvoiced > 0 ? Math.round((totalCollected / totalInvoiced) * 100) : 0;
@@ -111,7 +119,7 @@ export default async function DashboardPage() {
             <TrendingUp className="w-5 h-5 text-blue-500" />
           </div>
           <p className="mt-2 text-3xl font-semibold text-gray-900">₹{totalInvoiced.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-          <p className="text-xs text-gray-500 mt-2">Across {invoices.length} total invoices</p>
+          <p className="text-xs text-gray-500 mt-2">Across {totalInvoiceCount} total invoices</p>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col justify-between">
