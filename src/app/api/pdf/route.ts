@@ -147,11 +147,8 @@ export async function GET(request: Request) {
     // Additional small delay to ensure rendering completes
     await new Promise(r => setTimeout(r, 1500));
 
-    // Hide controls and freeze inputs to text
+    // Freeze inputs to text (Tailwind's print:hidden handles hiding controls)
     await page.evaluate(() => {
-      const controls = document.querySelector('.print\\\\:hidden');
-      if (controls) controls.remove();
-      
       const elements = document.querySelectorAll('input, textarea');
       elements.forEach((el) => {
         if (el instanceof HTMLInputElement) {
