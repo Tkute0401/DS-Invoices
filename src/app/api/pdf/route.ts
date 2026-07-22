@@ -147,9 +147,12 @@ export async function GET(request: Request) {
     // Additional small delay to ensure rendering completes
     await new Promise(r => setTimeout(r, 1500));
 
-    // Freeze inputs to text (Tailwind's print:hidden handles hiding controls)
-    await page.evaluate(() => {
-      const elements = document.querySelectorAll('input, textarea');
+    // Extract print-area HTML and freeze inputs
+    const html = await page.evaluate(() => {
+      const printArea = document.getElementById('print-area');
+      if (!printArea) return '';
+      
+      const elements = printArea.querySelectorAll('input, textarea');
       elements.forEach((el) => {
         if (el instanceof HTMLInputElement) {
           el.setAttribute('value', el.value);
@@ -160,6 +163,86 @@ export async function GET(request: Request) {
           el.innerHTML = el.value;
         }
       });
+      return printArea.innerHTML;
+    });
+
+    if (!html) throw new Error("Could not find print-area on the page");
+
+    // Inject Tailwind CDN with custom font configuration (Same as POST)
+    const styledHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <base href="${origin}/">
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+          <script src="https://cdn.tailwindcss.com"></script>
+          <script>
+            tailwind.config = {
+              theme: {
+                extend: {
+                  fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                  }
+                }
+              }
+            }
+          </script>
+          <style>
+            body { background: white; -webkit-print-color-adjust: exact; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+            input, textarea, select { 
+              border: none !important; 
+              resize: none !important; 
+              outline: none !important; 
+              font-family: inherit; 
+              background: transparent !important; 
+              color: inherit !important;
+              -webkit-appearance: none;
+              -moz-appearance: none;
+              appearance: none;
+            }
+            input[type="date"]::-webkit-calendar-picker-indicator { 
+              display: none !important; 
+              -webkit-appearance: none; 
+            }
+            input[type="number"]::-webkit-inner-spin-button, 
+            input[type="number"]::-webkit-outer-spin-button { 
+              -webkit-appearance: none; 
+              margin: 0; 
+            }
+            ::placeholder {
+              color: transparent !important;
+            }
+            .print\\:hidden { display: none !important; }
+          </style>
+        </head>
+        <body class="bg-white">
+          <div class="relative w-[210mm] bg-white text-sm text-gray-800 font-sans mx-auto overflow-x-hidden" style="zoom: 0.96; transform-origin: top center;">
+            ${html}
+          </div>
+        </body>
+      </html>
+    `;
+    
+    await page.setContent(styledHtml, { waitUntil: 'load' });
+
+    // Wait for Tailwind CSS to generate and fonts to load
+    await page.evaluate(async () => {
+      await new Promise((resolve) => {
+        const check = () => {
+          const styles = document.querySelectorAll('style');
+          if (styles.length > 1) { 
+            resolve(true);
+          } else {
+            requestAnimationFrame(check);
+          }
+        };
+        check();
+      });
+      await document.fonts.ready;
+      await new Promise(r => setTimeout(r, 500));
     });
 
     const pdfBuffer = await page.pdf({
