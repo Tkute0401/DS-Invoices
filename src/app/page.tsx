@@ -58,17 +58,24 @@ export default async function DashboardPage() {
   const totalDue = invoiceTotals._sum.amountDue || 0;
   const totalCollected = invoiceTotals._sum.amountPaid || 0;
   const totalInvoiced = invoiceTotals._sum.grandTotal || 0;
-  const totalInvoiceCount = invoiceTotals._count || 0;
+  const parseCount = (countObj: any) => {
+    if (typeof countObj === 'number') return countObj;
+    if (countObj && typeof countObj._all === 'number') return countObj._all;
+    return 0;
+  };
+
+  const totalInvoiceCount = parseCount(invoiceTotals._count);
 
   let overdueCount = 0;
   let paidCount = 0;
   let unpaidCount = 0;
 
   statusCounts.forEach((statusGroup: any) => {
-    if (statusGroup.status === 'OVERDUE') overdueCount = statusGroup._count;
-    if (statusGroup.status === 'PAID') paidCount = statusGroup._count;
+    const count = parseCount(statusGroup._count);
+    if (statusGroup.status === 'OVERDUE') overdueCount = count;
+    if (statusGroup.status === 'PAID') paidCount = count;
     if (statusGroup.status === 'UNPAID' || statusGroup.status === 'PART_PAID') {
-      unpaidCount += statusGroup._count;
+      unpaidCount += count;
     }
   });
 
