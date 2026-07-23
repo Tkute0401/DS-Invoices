@@ -67,7 +67,7 @@ export async function POST(request: Request) {
         </head>
         <body class="bg-white">
           <div class="relative w-[210mm] bg-white text-sm text-gray-800 font-sans mx-auto overflow-x-hidden" style="zoom: 0.96; transform-origin: top center;">
-            ${html.replace(/₹/g, 'Rs. ')}
+            ${html}
           </div>
         </body>
       </html>
@@ -152,9 +152,9 @@ export async function GET(request: Request) {
       content: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
+        body, #print-area { font-family: 'Inter', sans-serif !important; }
+        
         @media print {
-          body, #print-area { font-family: 'Inter', sans-serif !important; }
-          
           input, textarea, select { 
             border: none !important; 
             resize: none !important; 
@@ -190,15 +190,6 @@ export async function GET(request: Request) {
           el.innerHTML = el.value;
         }
       });
-      
-      // Replace ₹ with Rs. to fix missing font characters on Linux headless
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
-      let node;
-      while ((node = walker.nextNode())) {
-        if (node.nodeValue && node.nodeValue.includes('₹')) {
-          node.nodeValue = node.nodeValue.replace(/₹/g, 'Rs. ');
-        }
-      }
       
       // Wait for the Inter font to load completely
       await document.fonts.ready;
