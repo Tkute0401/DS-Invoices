@@ -322,6 +322,31 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
         clientId = client.id;
       }
 
+      // If new items, save them first
+      const updatedItems = await Promise.all(items.map(async (item: any) => {
+        if (!item.itemId && item.name) {
+          try {
+            const itemRes = await fetch('/api/items', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: item.name,
+                price: item.rate,
+                gstRate: item.gstRate,
+                skuId: `SKU-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+              })
+            });
+            if (itemRes.ok) {
+              const newItem = await itemRes.json();
+              return { ...item, itemId: newItem.id };
+            }
+          } catch (error) {
+            console.error('Failed to create new item:', error);
+          }
+        }
+        return item;
+      }));
+
       // Save the invoice
       const url = invoiceId ? `/api/invoices/${invoiceId}` : '/api/invoices';
       const method = invoiceId ? 'PUT' : 'POST';
@@ -344,7 +369,7 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
           gstType: taxType,
           countryOfSupply: countryOfSupply,
           placeOfSupply: placeOfSupply,
-          lineItems: items.map((item: any) => {
+          lineItems: updatedItems.map((item: any) => {
             const baseAmount = item.quantity * item.rate;
             const itemDiscount = item.discount || 0;
             const amount = baseAmount - itemDiscount;
