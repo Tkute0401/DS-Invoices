@@ -96,10 +96,14 @@ export async function POST(request: Request) {
       await new Promise(r => setTimeout(r, 500));
     });
 
+    const bodyHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+    const pdfHeight = Math.max(bodyHeight + 40, 1123); // At least A4 height
+
     const pdfBuffer = await page.pdf({
-      format: 'A4',
+      width: '210mm',
+      height: `${pdfHeight}px`,
       printBackground: true,
-      margin: { top: '10mm', right: '0', bottom: '0', left: '0' }
+      margin: { top: '10mm', right: '0', bottom: '10mm', left: '0' }
     });
     
     await browser.close();
@@ -195,10 +199,14 @@ export async function GET(request: Request) {
       await document.fonts.ready;
     });
 
+    const bodyHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+    const pdfHeight = Math.max(bodyHeight + 40, 1123); // At least A4 height
+
     const pdfBuffer = await page.pdf({
-      format: 'A4',
+      width: '210mm',
+      height: `${pdfHeight}px`,
       printBackground: true,
-      margin: { top: '10mm', right: '0', bottom: '0', left: '0' }
+      margin: { top: '10mm', right: '0', bottom: '10mm', left: '0' }
     });
     
     await browser.close();
