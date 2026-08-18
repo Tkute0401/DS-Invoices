@@ -97,7 +97,7 @@ export async function POST(request: Request) {
     });
 
     const bodyHeight = await page.evaluate(() => document.documentElement.scrollHeight);
-    const pdfHeight = Math.max(bodyHeight + 40, 1123); // At least A4 height
+    const pdfHeight = Math.max(bodyHeight + 120, 1123); // Account for 20mm margins (~76px)
 
     const pdfBuffer = await page.pdf({
       width: '210mm',
@@ -200,7 +200,7 @@ export async function GET(request: Request) {
     });
 
     const bodyHeight = await page.evaluate(() => document.documentElement.scrollHeight);
-    const pdfHeight = Math.max(bodyHeight + 40, 1123); // At least A4 height
+    const pdfHeight = Math.max(bodyHeight + 120, 1123); // Account for 20mm margins (~76px)
 
     const pdfBuffer = await page.pdf({
       width: '210mm',
