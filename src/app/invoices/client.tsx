@@ -21,6 +21,8 @@ export type InvoiceData = {
   date: Date
   dueDate: Date
   status: string
+  grandTotal: number
+  amountPaid: number
   amountDue: number
   client: {
     name: string
@@ -112,6 +114,56 @@ export function InvoicesClient({ data }: InvoicesClientProps) {
       },
     },
     {
+      accessorKey: "grandTotal",
+      header: ({ column }) => {
+        return (
+          <div className="text-right">
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Total Amount
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        )
+      },
+      cell: ({ row }) => {
+        const amount = parseFloat(row.getValue("grandTotal"))
+        const formatted = new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
+        }).format(amount)
+   
+        return <div className="text-right font-medium">{formatted}</div>
+      },
+    },
+    {
+      accessorKey: "amountPaid",
+      header: ({ column }) => {
+        return (
+          <div className="text-right">
+            <Button
+              variant="ghost"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              Paid Amount
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        )
+      },
+      cell: ({ row }) => {
+        const amount = parseFloat(row.getValue("amountPaid"))
+        const formatted = new Intl.NumberFormat("en-IN", {
+          style: "currency",
+          currency: "INR",
+        }).format(amount)
+   
+        return <div className="text-right font-medium text-green-600">{formatted}</div>
+      },
+    },
+    {
       accessorKey: "amountDue",
       header: ({ column }) => {
         return (
@@ -120,7 +172,7 @@ export function InvoicesClient({ data }: InvoicesClientProps) {
               variant="ghost"
               onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             >
-              Amount
+              Remaining Amount
               <ArrowUpDown className="ml-2 h-4 w-4" />
             </Button>
           </div>
@@ -133,7 +185,7 @@ export function InvoicesClient({ data }: InvoicesClientProps) {
           currency: "INR",
         }).format(amount)
    
-        return <div className="text-right font-medium">{formatted}</div>
+        return <div className="text-right font-medium text-red-600">{formatted}</div>
       },
     },
     {
