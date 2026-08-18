@@ -31,7 +31,7 @@ type Allocation = {
   amountAllocated: number;
 };
 
-export default function ReceiptEditor() {
+export default function ReceiptEditor({ receiptId }: { receiptId?: string }) {
   const [isSaving, setIsSaving] = useState(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const printAreaRef = useRef<HTMLDivElement>(null);
@@ -101,34 +101,88 @@ export default function ReceiptEditor() {
 
       setClients(clRes);
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const invId = urlParams.get('invoiceId');
-      
-      if (invId) {
-        const invoice = invRes.find((inv: any) => inv.id === invId);
-        if (invoice) {
-          const client = clRes.find((c: any) => c.id === invoice.clientId);
-          if (client) {
-            setSelectedClient({ value: client.id, label: client.name, isNew: false });
-            setIssuedTo({
-              id: client.id,
-              name: client.name,
-              address: client.billingAddress || '',
-              gstin: client.gstin || '',
-              pan: client.pan || ''
-            });
-
-            const clientOpenInvoices = invRes.filter((inv: any) => inv.clientId === client.id && inv.amountDue > 0);
-            setOpenInvoices(clientOpenInvoices);
-            
-            const newAllocations = clientOpenInvoices.map((inv: any) => ({
-              invoiceId: inv.id,
-              invoiceNumber: inv.invoiceNumber,
-              amountDue: inv.amountDue,
-              amountAllocated: inv.id === invId ? inv.amountDue : 0
+      if (receiptId) {
+        try {
+          const receiptRes = await fetch(`/api/receipts/${receiptId}`);
+          if (receiptRes.ok) {
+            const data = await receiptRes.json();
+            setReceipt(prev => ({
+              ...prev,
+              no: data.receiptNumber,
+              date: new Date(data.date).toISOString().split('T')[0],
+              method: data.paymentRecords?.[0]?.paymentMethod || 'BANK_TRANSFER',
+              paymentAccountId: data.paymentRecords?.[0]?.paymentAccountId || paRes?.[0]?.id || '',
+              amountReceived: data.amountReceived,
+              tdsAmount: data.tdsAmount,
+              transactionCharges: data.transactionCharges,
+              status: 'Settled'
             }));
-            setAllocations(newAllocations);
-            setReceipt(prev => ({ ...prev, amountReceived: invoice.amountDue }));
+
+            if (data.client) {
+              setSelectedClient({ value: data.client.id, label: data.client.name, isNew: false });
+              setIssuedTo({
+                id: data.client.id,
+                name: data.client.name,
+                address: data.client.billingAddress || '',
+                gstin: data.client.gstin || '',
+                pan: data.client.pan || ''
+              });
+
+              // Merge open invoices with invoices already paid by THIS receipt
+              const allocatedInvoices = data.paymentRecords.map((pr: any) => pr.invoiceId);
+              const allRelevantInvoices = invRes.filter((inv: any) => 
+                (inv.clientId === data.client.id && inv.amountDue > 0) || allocatedInvoices.includes(inv.id)
+              );
+              
+              const uniqueInvoices = Array.from(new Map(allRelevantInvoices.map((inv: any) => [inv.id, inv])).values()) as Invoice[];
+              setOpenInvoices(uniqueInvoices);
+              
+              const newAllocations = uniqueInvoices.map((inv: Invoice) => {
+                const pr = data.paymentRecords.find((r: any) => r.invoiceId === inv.id);
+                const allocAmount = pr ? pr.amountAllocated : 0;
+                return {
+                  invoiceId: inv.id,
+                  invoiceNumber: inv.invoiceNumber,
+                  amountDue: inv.amountDue + allocAmount, // Show amount due before this receipt was applied
+                  amountAllocated: allocAmount
+                };
+              });
+              setAllocations(newAllocations);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch receipt data", err);
+        }
+      } else {
+        const urlParams = new URLSearchParams(window.location.search);
+        const invId = urlParams.get('invoiceId');
+        
+        if (invId) {
+          const invoice = invRes.find((inv: any) => inv.id === invId);
+          if (invoice) {
+            const client = clRes.find((c: any) => c.id === invoice.clientId);
+            if (client) {
+              setSelectedClient({ value: client.id, label: client.name, isNew: false });
+              setIssuedTo({
+                id: client.id,
+                name: client.name,
+                address: client.billingAddress || '',
+                gstin: client.gstin || '',
+                pan: client.pan || ''
+              });
+  
+              const clientOpenInvoices = invRes.filter((inv: any) => inv.clientId === client.id && inv.amountDue > 0);
+              setOpenInvoices(clientOpenInvoices);
+              
+              const newAllocations = clientOpenInvoices.map((inv: any) => ({
+                invoiceId: inv.id,
+                invoiceNumber: inv.invoiceNumber,
+                amountDue: inv.amountDue,
+                amountAllocated: inv.id === invId ? inv.amountDue : 0
+              }));
+              setAllocations(newAllocations);
+              setReceipt(prev => ({ ...prev, amountReceived: invoice.amountDue }));
+            }
           }
         }
       }
@@ -283,8 +337,8 @@ export default function ReceiptEditor() {
       const validAllocations = allocations.filter((a: any) => a.amountAllocated > 0);
 
       // 2. Save receipt
-      const res = await fetch('/api/receipts', {
-        method: 'POST',
+      const res = await fetch(receiptId ? `/api/receipts/${receiptId}` : '/api/receipts', {
+        method: receiptId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clientId: clientId,
