@@ -71,8 +71,14 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.json(invoice)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating invoice:', error)
+    
+    // Check for Prisma unique constraint violation
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: 'Invoice number already exists. Please use a different one.' }, { status: 400 })
+    }
+
     return NextResponse.json({ error: 'Failed to create invoice' }, { status: 500 })
   }
 }

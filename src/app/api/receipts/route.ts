@@ -87,8 +87,13 @@ export async function POST(req: Request) {
     })
 
     return NextResponse.json(result)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating receipt:', error)
+
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: 'Receipt number already exists. Please use a different one.' }, { status: 400 })
+    }
+
     return NextResponse.json({ error: 'Failed to create receipt' }, { status: 500 })
   }
 }

@@ -141,6 +141,16 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
         } catch (error) {
           console.error("Error fetching invoice:", error);
         }
+      } else {
+        // Fetch next available invoice number for new invoice
+        try {
+          const nextNumRes = await fetch('/api/invoices/next-number').then(res => res.json());
+          if (nextNumRes && nextNumRes.nextInvoiceNumber) {
+            setInvoiceNumber(nextNumRes.nextInvoiceNumber);
+          }
+        } catch (error) {
+          console.error("Error fetching next invoice number:", error);
+        }
       }
     };
     initData();

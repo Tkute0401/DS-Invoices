@@ -154,6 +154,15 @@ export default function ReceiptEditor({ receiptId }: { receiptId?: string }) {
           console.error("Failed to fetch receipt data", err);
         }
       } else {
+        try {
+          const nextNumRes = await fetch('/api/receipts/next-number').then(res => res.json());
+          if (nextNumRes && nextNumRes.nextReceiptNumber) {
+            setReceipt(prev => ({ ...prev, no: nextNumRes.nextReceiptNumber }));
+          }
+        } catch (error) {
+          console.error("Error fetching next receipt number:", error);
+        }
+
         const urlParams = new URLSearchParams(window.location.search);
         const invId = urlParams.get('invoiceId');
         
