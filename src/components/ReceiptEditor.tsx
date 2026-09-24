@@ -252,6 +252,19 @@ export default function ReceiptEditor({ receiptId }: { receiptId?: string }) {
     }
   };
 
+  const autoAllocate = (field: string, value: number) => {
+    const newReceipt = { ...receipt, [field]: value };
+    setReceipt(newReceipt);
+    
+    const newSettlement = (newReceipt.amountReceived || 0) + (newReceipt.tdsAmount || 0) + (newReceipt.transactionCharges || 0);
+    let remaining = newSettlement;
+    setAllocations(prevAllocations => prevAllocations.map(a => {
+      const toAllocate = Math.min(a.amountDue, remaining);
+      remaining -= toAllocate;
+      return { ...a, amountAllocated: toAllocate };
+    }));
+  };
+
   const updateAllocation = (index: number, amount: number) => {
     const newAllocations = [...allocations];
     newAllocations[index].amountAllocated = amount;
@@ -502,21 +515,21 @@ export default function ReceiptEditor({ receiptId }: { receiptId?: string }) {
                 <div className="text-[#333b47] font-bold mb-4">Amount Received</div>
                 <div className="flex items-center text-[#4b5563]">
                   <span className="mr-0.5 font-medium text-black">₹</span>
-                  <input type="number" value={receipt.amountReceived || ''} onChange={e => setReceipt({...receipt, amountReceived: Number(e.target.value)})} placeholder="0.00" className="font-bold text-black bg-transparent outline-none w-full border-b border-transparent hover:border-gray-300 focus:border-black leading-tight" />
+                  <input type="number" value={receipt.amountReceived || ''} onChange={e => autoAllocate('amountReceived', Number(e.target.value))} placeholder="0.00" className="font-bold text-black bg-transparent outline-none w-full border-b border-transparent hover:border-gray-300 focus:border-black leading-tight" />
                 </div>
               </div>
               <div className="border-r border-b border-gray-100 p-4 col-span-1">
                 <div className="text-[#333b47] font-bold mb-4">TDS Amount</div>
                 <div className="flex items-center text-[#4b5563]">
                   <span className="mr-0.5 font-medium text-black">₹</span>
-                  <input type="number" value={receipt.tdsAmount || ''} onChange={e => setReceipt({...receipt, tdsAmount: Number(e.target.value)})} placeholder="0.00" className="font-bold text-black bg-transparent outline-none w-full border-b border-transparent hover:border-gray-300 focus:border-black leading-tight" />
+                  <input type="number" value={receipt.tdsAmount || ''} onChange={e => autoAllocate('tdsAmount', Number(e.target.value))} placeholder="0.00" className="font-bold text-black bg-transparent outline-none w-full border-b border-transparent hover:border-gray-300 focus:border-black leading-tight" />
                 </div>
               </div>
               <div className="border-b border-gray-100 p-4 col-span-1">
                 <div className="text-[#333b47] font-bold mb-4">Trans. Charges</div>
                 <div className="flex items-center text-[#4b5563]">
                   <span className="mr-0.5 font-medium text-black">₹</span>
-                  <input type="number" value={receipt.transactionCharges || ''} onChange={e => setReceipt({...receipt, transactionCharges: Number(e.target.value)})} placeholder="0.00" className="font-bold text-black bg-transparent outline-none w-full border-b border-transparent hover:border-gray-300 focus:border-black leading-tight" />
+                  <input type="number" value={receipt.transactionCharges || ''} onChange={e => autoAllocate('transactionCharges', Number(e.target.value))} placeholder="0.00" className="font-bold text-black bg-transparent outline-none w-full border-b border-transparent hover:border-gray-300 focus:border-black leading-tight" />
                 </div>
               </div>
             </div>

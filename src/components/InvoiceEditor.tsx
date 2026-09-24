@@ -262,8 +262,8 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
   const totals = calculateTotals();
   const amountPaid = 0; 
   const dueAmount = totals.grandTotal - amountPaid;
-  const paymentStatus = amountPaid >= totals.grandTotal ? 'PAID' : (amountPaid > 0 ? 'PART PAID' : 'UNPAID');
-  const paymentStatusColor = paymentStatus === 'PAID' ? 'bg-green-500' : (paymentStatus === 'PART PAID' ? 'bg-[#3b82f6]' : 'bg-black');
+  const paymentStatus = amountPaid >= totals.grandTotal ? 'PAID' : (amountPaid > 0 ? 'PART_PAID' : 'UNPAID');
+  const paymentStatusColor = paymentStatus === 'PAID' ? 'bg-green-500' : (paymentStatus === 'PART_PAID' ? 'bg-[#3b82f6]' : 'bg-black');
 
   const handlePrint = async () => {
     setIsGeneratingPdf(true);
@@ -475,7 +475,7 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
               <h1 className="text-4xl text-black font-black tracking-widest uppercase mt-0">INVOICE</h1>
             </div>
             <div className="w-1/3 flex justify-end">
-              <div className={`${paymentStatusColor} text-white px-3 py-1 text-[11px] font-bold uppercase tracking-widest rounded mt-[60px] shadow-sm`}>{paymentStatus}</div>
+              <div className={`${paymentStatusColor} text-white px-3 py-1 text-[11px] font-bold uppercase tracking-widest rounded mt-[60px] shadow-sm`}>{paymentStatus.replace('_', ' ')}</div>
             </div>
           </div>
           <div className="flex justify-between">
