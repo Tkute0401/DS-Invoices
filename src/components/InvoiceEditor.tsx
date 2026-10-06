@@ -73,6 +73,7 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
   ]);
 
   const [additionalCharges, setAdditionalCharges] = useState(0);
+  const [amountPaid, setAmountPaid] = useState(0);
 
   // Tax Settings
   const [taxType, setTaxType] = useState('IGST'); // IGST or CGST_SGST
@@ -109,6 +110,7 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
             setDate(new Date(invData.date).toISOString().split('T')[0]);
             setDueDate(new Date(invData.dueDate).toISOString().split('T')[0]);
             setAdditionalCharges(invData.additionalCharges || 0);
+            setAmountPaid(invData.amountPaid || 0);
             setTaxType(invData.taxType || 'GST');
             setCountryOfSupply(invData.countryOfSupply || 'India');
             setPlaceOfSupply(invData.placeOfSupply || '');
@@ -260,7 +262,6 @@ export default function InvoiceEditor({ invoiceId }: { invoiceId?: string }) {
   };
 
   const totals = calculateTotals();
-  const amountPaid = 0; 
   const dueAmount = totals.grandTotal - amountPaid;
   const paymentStatus = amountPaid >= totals.grandTotal ? 'PAID' : (amountPaid > 0 ? 'PART_PAID' : 'UNPAID');
   const paymentStatusColor = paymentStatus === 'PAID' ? 'bg-green-500' : (paymentStatus === 'PART_PAID' ? 'bg-[#3b82f6]' : 'bg-black');
