@@ -194,6 +194,18 @@ export async function GET(request: Request) {
           el.innerHTML = el.value;
         }
       });
+
+      const selects = document.querySelectorAll('select');
+      selects.forEach((sel) => {
+        const options = sel.querySelectorAll('option');
+        options.forEach((opt) => {
+          if (opt.value === sel.value) {
+            opt.setAttribute('selected', 'selected');
+          } else {
+            opt.removeAttribute('selected');
+          }
+        });
+      });
       
       // Wait for the Inter font to load completely
       await document.fonts.ready;

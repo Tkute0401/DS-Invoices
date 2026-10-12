@@ -129,7 +129,7 @@ export default function ReceiptEditor({ receiptId }: { receiptId?: string }) {
               });
 
               // Merge open invoices with invoices already paid by THIS receipt
-              const allocatedInvoices = data.paymentRecords.map((pr: any) => pr.invoiceId);
+              const allocatedInvoices = data.paymentRecords.filter((pr: any) => pr.invoiceId).map((pr: any) => pr.invoiceId);
               const allRelevantInvoices = invRes.filter((inv: any) =>
                 (inv.clientId === data.client.id && inv.amountDue > 0) || allocatedInvoices.includes(inv.id)
               );
@@ -278,12 +278,20 @@ export default function ReceiptEditor({ receiptId }: { receiptId?: string }) {
   const totalSettlementValue = (receipt.amountReceived || 0) + tds + charges;
   const totalReceived = receipt.amountReceived || 0;
 
+  const selectedAccount = paymentAccounts.find((acc: any) => acc.id === receipt.paymentAccountId);
+  const selectedAccountDisplay = selectedAccount
+    ? `${selectedAccount.accountName}${selectedAccount.bankName || selectedAccount.accountType ? ` (${selectedAccount.bankName || selectedAccount.accountType})` : ''}`
+    : (receipt.paymentAccountId ? '-' : '-');
+
   const handlePrint = async () => {
     setIsGeneratingPdf(true);
 
-    // Give React a moment to re-render inputs as plain text
+    // Give React a moment to re-render inputs and select as plain text
     setTimeout(async () => {
-      if (!printAreaRef.current) return;
+      if (!printAreaRef.current) {
+        setIsGeneratingPdf(false);
+        return;
+      }
 
       const elements = printAreaRef.current.querySelectorAll('input, textarea');
       elements.forEach((el) => {
@@ -296,6 +304,18 @@ export default function ReceiptEditor({ receiptId }: { receiptId?: string }) {
         } else if (el instanceof HTMLTextAreaElement) {
           el.innerHTML = el.value;
         }
+      });
+
+      const selectElements = printAreaRef.current.querySelectorAll('select');
+      selectElements.forEach((sel) => {
+        const options = sel.querySelectorAll('option');
+        options.forEach((opt) => {
+          if (opt.value === sel.value) {
+            opt.setAttribute('selected', 'selected');
+          } else {
+            opt.removeAttribute('selected');
+          }
+        });
       });
 
       const html = printAreaRef.current.innerHTML;
@@ -358,6 +378,19 @@ export default function ReceiptEditor({ receiptId }: { receiptId?: string }) {
       }
 
       const validAllocations = allocations.filter((a: any) => a.amountAllocated > 0);
+      const paymentRecordsToSave = validAllocations.length > 0
+        ? validAllocations.map((alloc: any) => ({
+            invoiceId: alloc.invoiceId,
+            amountAllocated: alloc.amountAllocated,
+            paymentMethod: receipt.method,
+            paymentAccountId: receipt.paymentAccountId || null
+          }))
+        : [{
+            invoiceId: null,
+            amountAllocated: receipt.amountReceived || 0,
+            paymentMethod: receipt.method,
+            paymentAccountId: receipt.paymentAccountId || null
+          }];
 
       // 2. Save receipt
       const res = await fetch(receiptId ? `/api/receipts/${receiptId}` : '/api/receipts', {
@@ -370,12 +403,7 @@ export default function ReceiptEditor({ receiptId }: { receiptId?: string }) {
           amountReceived: receipt.amountReceived,
           tdsAmount: receipt.tdsAmount,
           transactionCharges: receipt.transactionCharges,
-          paymentRecords: validAllocations.map((alloc: any) => ({
-            invoiceId: alloc.invoiceId,
-            amountAllocated: alloc.amountAllocated,
-            paymentMethod: receipt.method,
-            paymentAccountId: receipt.paymentAccountId || null
-          }))
+          paymentRecords: paymentRecordsToSave
         })
       });
 
@@ -505,12 +533,27 @@ export default function ReceiptEditor({ receiptId }: { receiptId?: string }) {
               <div className="grid grid-cols-4">
                 <div className="border-r border-b border-gray-100 p-4 col-span-1">
                   <div className="text-[#333b47] font-bold mb-4">Payment Account</div>
-                  <select value={receipt.paymentAccountId} onChange={e => setReceipt({ ...receipt, paymentAccountId: e.target.value })} className="text-[#4b5563] bg-transparent outline-none w-full border-b border-transparent hover:border-gray-300 focus:border-black leading-tight cursor-pointer">
-                    <option value="">-- Select --</option>
-                    {paymentAccounts.map((acc: any) => (
-                      <option key={acc.id} value={acc.id}>{acc.accountName} ({acc.bankName || acc.accountType})</option>
-                    ))}
-                  </select>
+                  {isGeneratingPdf ? (
+                    <div className="text-[#4b5563] font-medium leading-tight text-[13px] py-0.5">
+                      {selectedAccountDisplay}
+                    </div>
+                  ) : (
+                    <>
+                      <div className="hidden print:block text-[#4b5563] font-medium leading-tight text-[13px] py-0.5">
+                        {selectedAccountDisplay}
+                      </div>
+                      <select 
+                        value={receipt.paymentAccountId} 
+                        onChange={e => setReceipt({ ...receipt, paymentAccountId: e.target.value })} 
+                        className="text-[#4b5563] bg-transparent outline-none w-full border-b border-transparent hover:border-gray-300 focus:border-black leading-tight cursor-pointer print:hidden text-[13px]"
+                      >
+                        <option value="">-- Select --</option>
+                        {paymentAccounts.map((acc: any) => (
+                          <option key={acc.id} value={acc.id}>{acc.accountName} ({acc.bankName || acc.accountType})</option>
+                        ))}
+                      </select>
+                    </>
+                  )}
                 </div>
                 <div className="border-r border-b border-gray-100 p-4 col-span-1">
                   <div className="text-[#333b47] font-bold mb-4">Amount Received</div>
