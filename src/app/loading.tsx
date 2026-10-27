@@ -13,6 +13,15 @@ export default function Loading() {
         </div>
       </div>
       
+      {/* Month Filter Selector Skeleton */}
+      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs mb-6 flex flex-col md:flex-row justify-between gap-3">
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-32 rounded-lg" />
+          <Skeleton className="h-8 w-28 rounded-lg" />
+        </div>
+        <Skeleton className="h-8 w-44 rounded-lg" />
+      </div>
+
       {/* Top Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {Array.from({ length: 4 }).map((_, i) => (
